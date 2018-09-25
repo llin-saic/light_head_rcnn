@@ -1,5 +1,9 @@
+ifeq (${PYTHON},)
+PYTHON := python3
+endif
+
 all:
-	python3 setup.py build_ext --inplace
+	${PYTHON} setup.py build_ext --inplace
 	rm -rf build
 clean:
 	rm -rf */*.pyc

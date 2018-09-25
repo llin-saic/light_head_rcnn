@@ -1,3 +1,14 @@
+#export PYTHON=python2
+
+if [ -z "$PYTHON" ]
+then
+  # Empty
+  echo "Build with python2"
+else
+  # Assigned
+  echo "Build with "${PYTHON}
+fi
+
 pushd ./utils/py_faster_rcnn_utils
 make;
 popd
