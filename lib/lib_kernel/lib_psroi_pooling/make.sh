@@ -1,5 +1,10 @@
-TF_INC=$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_include())')
-TF_LIB=$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
+if [ -z "$PYTHON" ]
+then
+  PYTHON=python3 
+fi
+
+TF_INC=$(${PYTHON} -c 'import tensorflow as tf; print(tf.sysconfig.get_include())')
+TF_LIB=$(${PYTHON} -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
 CUDA_PATH=/usr/local/cuda/
 
 nvcc -std=c++11 -c -o psroi_pooling_op.cu.o psroi_pooling_op_gpu.cu.cc \

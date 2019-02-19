@@ -23,7 +23,8 @@ def get_hw_by_short_size(im_height, im_width, short_size, max_size):
 
 
 def resize_img_by_short_and_max_size(
-        img, short_size, max_size, *, random_scale_methods=False):
+        #img, short_size, max_size, *, random_scale_methods=False):
+        img, short_size, max_size, random_scale_methods=False):
     resized_height, resized_width = get_hw_by_short_size(
         img.shape[0], img.shape[1], short_size, max_size)
     scale = resized_height / (img.shape[0] + 0.0)
@@ -37,7 +38,8 @@ def resize_img_by_short_and_max_size(
     return img, scale
 
 
-def flip_image_and_boxes(img, boxes=None, *, segs=None):
+#def flip_image_and_boxes(img, boxes=None, *, segs=None):
+def flip_image_and_boxes(img, boxes=None, segs=None):
     h, w, c = img.shape
     flip_img = cv2.flip(img, 1)
     if segs is not None:
