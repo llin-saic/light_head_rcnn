@@ -2,6 +2,10 @@
 import sys
 from config import config
 import numpy as np
+if "/opt/ros/kinetic/lib/python2.7/dist-packages" in sys.path:
+  sys.path.remove("/opt/ros/kinetic/lib/python2.7/dist-packages")
+if "/opt/ros/kinetic_pb/lib/python2.7/dist-packages" in sys.path:
+  sys.path.remove("/opt/ros/kinetic_pb/lib/python2.7/dist-packages")
 import cv2
 import time
 import json
@@ -91,10 +95,13 @@ def get_data_for_singlegpu(batch_lines):
     batch_per_gpu = config.train_batch_per_gpu
     short_size = config.image_short_size
     max_size = config.image_max_size
-
+    #print("abaadsg", type(batch_lines))
+    #print(batch_lines)
     for i in range(len(batch_lines)):
         raw_line = batch_lines[i]
-        record = json.loads(raw_line)
+        #record = json.loads(raw_line)
+        # Liwen: convert to string
+        record = json.loads(raw_line.decode())
         batch_records.append(record)
         hw_stat[i, :] = record['height'], record['width']
 

@@ -1,4 +1,6 @@
-#export PYTHON=python2
+#!/bin/bash
+
+export PYTHON=python2
 
 if [ -z "$PYTHON" ]
 then

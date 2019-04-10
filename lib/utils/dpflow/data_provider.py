@@ -202,6 +202,7 @@ class MultiProcessMapDataZMQ(_ParallelMapData):
 
                 #for i in range(config.train_batch_per_gpu):
                 dp_list = loads(socket.recv(copy=False).bytes)
+                #print("dp_list:", dp_list)
                 #dp_list.append(dp)
 
                 dp = self.map_func(dp_list)
@@ -274,6 +275,7 @@ class MultiProcessMapDataZMQ(_ParallelMapData):
     def _recv(self):
         msg = self.socket.recv_multipart(copy=False)
         dp = loads(msg[1].bytes)
+        #print("dp:", dp)
         return dp
 
     def get_data(self):

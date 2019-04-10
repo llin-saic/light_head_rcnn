@@ -13,6 +13,7 @@ from detection_opr.utils.bbox_transform import bbox_transform
 from utils.cython_bbox import bbox_overlaps
 from config import cfg
 from IPython import embed
+import ipdb
 
 def proposal_target_layer(rpn_rois, rpn_scores, gt_boxes, _num_classes):
     """
@@ -102,6 +103,7 @@ def _sample_rois(all_rois, all_scores, gt_boxes, fg_rois_per_image,
     """Generate a random sample of RoIs comprising foreground and background
     examples.
     """
+    ipdb.set_trace()
     # overlaps: (rois x gt_boxes)
     overlaps = bbox_overlaps(
         np.ascontiguousarray(all_rois[:, 1:5], dtype=np.float),

@@ -30,6 +30,7 @@ def dumps_msgpack(obj):
         Implementation-dependent bytes-like object
     """
     return msgpack.dumps(obj, use_bin_type=True)
+    #return msgpack.dumps(obj, use_bin_type=False)
 
 
 def loads_msgpack(buf):
@@ -37,7 +38,10 @@ def loads_msgpack(buf):
     Args:
         buf: the output of `dumps`.
     """
-    return msgpack.loads(buf, raw=False)
+    #return msgpack.loads(buf, raw=False)
+    #print("loads:", msgpack.loads(buf, raw=True))
+    return msgpack.loads(buf, raw=True)
+    #return msgpack.loads(buf)
 
 
 def dumps_pyarrow(obj):
@@ -59,8 +63,10 @@ def loads_pyarrow(buf):
 
 
 if pa is None:
+    #print("tesate")
     loads = loads_msgpack
     dumps = dumps_msgpack
 else:
+    #print("124125")
     loads = loads_pyarrow
     dumps = dumps_pyarrow

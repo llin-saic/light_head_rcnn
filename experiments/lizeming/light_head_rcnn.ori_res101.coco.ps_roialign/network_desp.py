@@ -78,7 +78,7 @@ class Network(object):
     def inference(self, mode, inputs):
         is_training = mode == 'TRAIN'
 
-        ###decode your inputs
+        ###decode your input tensors
         [image, im_info, gt_boxes] = inputs
 
         image.set_shape([None, None, None, 3])
@@ -87,22 +87,29 @@ class Network(object):
             gt_boxes.set_shape([None, None, 5])
         ##end of decode
 
+        # num_anchors=15, scale: 2,4,8,16,32, ratio: 0.5,1,2
         num_anchors = len(cfg.anchor_scales) * len(cfg.anchor_ratios)
         bottleneck = resnet_v1.bottleneck
 
         blocks = [
+            # conv2_x: 3*{[1x1,64] + [3x3,64] + [1x1,256]}
             resnet_utils.Block('block1', bottleneck,
                                [(256, 64, 1, 1)] * 2 + [(256, 64, 1, 1)]),
+            # conv3_x: 4*{[1x1,128] + [3x3,128] + [1x1,512]}
             resnet_utils.Block('block2', bottleneck,
                                [(512, 128, 2, 1)] + [(512, 128, 1, 1)] * 3),
+            # conv4_x: 4*{[1x1,256] + [3x3,256] + [1x1,1024]}
             resnet_utils.Block('block3', bottleneck,
                                [(1024, 256, 2, 1)] + [(1024, 256, 1, 1)] * 22),
+            # conv5_x: 4*{[1x1,512] + [3x3,512] + [1x1,2048]}
             resnet_utils.Block('block4', bottleneck,
                                [(2048, 512, 1, 2)] + [(2048, 512, 1, 2)] * 2)
         ]
 
+        # conv1 + conv2_x
         with slim.arg_scope(resnet_arg_scope(is_training=False)):
             with tf.variable_scope('resnet_v1_101', 'resnet_v1_101'):
+                # First conv layer of res101
                 net = resnet_utils.conv2d_same(
                     image, 64, 7, stride=2, scope='conv1')
                 net = slim.max_pool2d(
@@ -111,38 +118,45 @@ class Network(object):
                 net, blocks[0:1], global_pool=False, include_root_block=False,
                 scope='resnet_v1_101')
 
+        # conv3_x
         with slim.arg_scope(resnet_arg_scope(is_training=is_training)):
             net_conv3, _ = resnet_v1.resnet_v1(
                 net, blocks[1:2], global_pool=False, include_root_block=False,
                 scope='resnet_v1_101')
 
+        # conv4_x
         with slim.arg_scope(resnet_arg_scope(is_training=is_training)):
             net_conv4, _ = resnet_v1.resnet_v1(
                 net_conv3, blocks[2:3], global_pool=False,
                 include_root_block=False, scope='resnet_v1_101')
 
+        # conv5_x
         with slim.arg_scope(resnet_arg_scope(is_training=is_training)):
             net_conv5, _ = resnet_v1.resnet_v1(
                 net_conv4, blocks[-1:], global_pool=False,
                 include_root_block=False, scope='resnet_v1_101')
 
+        # Why need this initializer
         initializer = tf.random_normal_initializer(mean=0.0, stddev=0.01)
         initializer_bbox = tf.random_normal_initializer(mean=0.0, stddev=0.001)
         
-
+        # RPN setup
         with tf.variable_scope(
                 'resnet_v1_101', 'resnet_v1_101',
                 regularizer=tf.contrib.layers.l2_regularizer(
                     cfg.weight_decay)):
             # rpn
+            # slim.conv2d(inputs, num_outputs, kernel_size)
             rpn = slim.conv2d(
                 net_conv4, 512, [3, 3], trainable=is_training,
                 weights_initializer=initializer, activation_fn=nn_ops.relu,
                 scope="rpn_conv/3x3")
+            # Output: prob of 2(objectness + nonobjectness) for each anchor(15)
             rpn_cls_score = slim.conv2d(
                 rpn, num_anchors * 2, [1, 1], trainable=is_training,
                 weights_initializer=initializer, padding='VALID',
                 activation_fn=None, scope='rpn_cls_score')
+            # Output: prob of 4(bbox) for each anchor(15)
             rpn_bbox_pred = slim.conv2d(
                 rpn, num_anchors * 4, [1, 1], trainable=is_training,
                 weights_initializer=initializer, padding='VALID',
@@ -159,12 +173,14 @@ class Network(object):
             rpn_cls_prob = tf.nn.softmax(rpn_cls_prob, name='rpn_cls_prob')
             rpn_cls_prob = tf.reshape(rpn_cls_prob, tf.shape(rpn_cls_score))
 
+            # Generate proposals
             rois, roi_scores = proposal_opr(
                 rpn_cls_prob, rpn_bbox_pred, im_info, mode, cfg.stride,
                 anchors, num_anchors, is_tfchannel=True, is_tfnms=True)
 
             if is_training:
                 with tf.variable_scope('anchor') as scope:
+                    # ?? anchor target layer
                     rpn_labels, rpn_bbox_targets = \
                         tf.py_func(
                             anchor_target_layer,
@@ -175,6 +191,7 @@ class Network(object):
 
                 with tf.control_dependencies([rpn_labels]):
                     with tf.variable_scope('rpn_rois') as scope:
+                        # ?? proposal target layer
                         rois, labels, bbox_targets = \
                             tf.py_func(
                                 proposal_target_layer,
@@ -183,6 +200,7 @@ class Network(object):
                         labels = tf.to_int32(labels, name="to_int32")
 
 
+        # RFCN part
         with tf.variable_scope(
                 'resnet_v1_101', 'resnet_v1_101',
                 regularizer=tf.contrib.layers.l2_regularizer(

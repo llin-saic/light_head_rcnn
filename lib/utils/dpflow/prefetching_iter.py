@@ -32,7 +32,14 @@ class PrefetchingIter:
                     blobs_list = []
                     cnt = 0
                     while cnt < num_gpu:
-                        blobs = next(iters)
+                        blobs1 = next(iters)
+                        blobs = {}
+                        # Liwen: change to string type
+                        for k, v in blobs1.items():
+                          blobs[k.decode()] = v 
+                        #print("blobs:", i, blobs)
+                        #print("blobs:", blobs[b"is_valid"])
+                        # Liwen: temporarily fix
                         if blobs['is_valid']:
                             cnt += 1
                             blobs_list.append(blobs)

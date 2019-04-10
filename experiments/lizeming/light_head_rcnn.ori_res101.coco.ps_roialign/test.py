@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # encoding: utf-8
 """
 @author: jemmy li
@@ -63,7 +64,7 @@ def inference(val_func, inputs, data_dict):
         dtype=np.float32)
 
     feed_dict = {inputs[0]: resized_img[None, :, :, :], inputs[1]: im_info}
-    print('fd:\n', feed_dict)
+    #print('fd:\n', feed_dict)
     #st = time.time()
     _, scores, pred_boxes, rois = val_func(feed_dict=feed_dict)
     #ed = time.time()
@@ -109,7 +110,6 @@ def worker(model_file, dev, records, read_func, result_queue):
         result_dict = inference(func, inputs, data_dict)
         result_queue.put_nowait(result_dict)
 
-t
 def eval_all(args):
     devs = args.devices.split(',')
     misc.ensure_dir(config.eval_dir)

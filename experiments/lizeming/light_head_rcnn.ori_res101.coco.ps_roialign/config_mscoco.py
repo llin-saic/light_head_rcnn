@@ -37,8 +37,7 @@ class Config:
     this_model_dir = osp.split(os.path.realpath(__file__))[0]
     eval_dir = osp.join(output_dir, 'eval_dump')
     tb_dir = osp.join(output_dir, 'tfboard_dump')
-    #weight = osp.join(root_dir, 'data/imagenet_weights/res101.ckpt')
-    weight = "/home/llin/dev/light_head_rcnn/output/llin/light_head_rcnn.ori_res101.coco.ps_roialign/base_model/epoch_26.ckpt"
+    weight = osp.join(root_dir, 'data/imagenet_weights/res101.ckpt')
 
     program_name = user + ":" + os.path.split(
         os.path.split(os.path.realpath(__file__))[0])[1]
@@ -59,10 +58,9 @@ class Config:
     class_names2id = dict(list(zip(class_names, list(range(num_classes)))))
 
     batch_image_preprocess = 'pad'
-    #train_root_folder = os.path.join(root_dir, 'data/MSCOCO')
-    train_root_folder = os.path.join(root_dir, 'data/SAIC')
+    train_root_folder = os.path.join(root_dir, 'data/MSCOCO')
     train_source = os.path.join(
-        root_dir, 'data', 'SAIC/odformat/train_0.odgt')
+        root_dir, 'data', 'MSCOCO/odformat/coco_trainvalmini.odgt')
 
     eval_root_folder = os.path.join(root_dir, 'data/MSCOCO')
     eval_source = os.path.join(
@@ -103,20 +101,17 @@ class Config:
     test_batch_per_gpu = 1
     bn_training = False
     tb_dump_interval = 500
-    #nr_image_per_epoch = 80000  # detectron 1x setting
-    nr_image_per_epoch = 300  # detectron 1x setting
+    nr_image_per_epoch = 80000  # detectron 1x setting
     basic_lr = 5e-4 * train_batch_per_gpu * 1.25
     momentum = 0.9
-    weight_decay = 0.0003 # original: 0.0001
+    weight_decay = 0.0001
 
     from utils.tf_utils import lr_policy
-    #max_epoch = 30
-    max_epoch = 51
+    max_epoch = 30
     warm_iter = 500
     warm_fractor = 1.0 / 3.0
     multi_stage_lr_policy = lr_policy.MultiStageLR(
-        [[19, basic_lr], [25, basic_lr * 0.1], [30, basic_lr * 0.01],
-         [40, basic_lr * 0.005], [51, basic_lr * 0.001]])
+        [[19, basic_lr], [25, basic_lr * 0.1], [30, basic_lr * 0.01]])
 
     def get_lr(self, epoch):
         return self.multi_stage_lr_policy.get_lr(epoch)
